@@ -1,8 +1,13 @@
 *.in
 *.out
+*.ans
 *.txt
 *.o
 main
 *.log
+*.ans
 *.swp
 *.gout*
+.vscode
+gen.*
+gen

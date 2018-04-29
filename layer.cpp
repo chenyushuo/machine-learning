@@ -13,11 +13,18 @@ Layer :: Layer(const int node_number,
     node_number_(node_number), input_(), output_(), delta_(),
     ActiveFunc_(ActiveFunc), D_ActiveFunc_(D_ActiveFunc)
 {
-    
+
 }
 
-inline void Layer :: Forward(const Layer *pre, const Matrix &theta, const ColVector &bias){
+void Layer :: Forward(const Layer *pre,
+                      const Matrix &theta, const ColVector &bias)
+{
     output_ = input_ = theta * pre -> output_ + bias;
+    /*cout << "-----------------------" << endl;
+    cout << "theta : " << theta << endl;
+    cout << "pre -> output : " << pre -> output_ << endl;
+    cout << "input : " << input_ << endl;
+    cout << "-----------------------" << endl;*/
     output_ . Map(ActiveFunc_);
 }
 
@@ -26,17 +33,18 @@ inline void Layer :: Multi_D_ActiveFunc_(){
         delta_ . Value(i) *= D_ActiveFunc_(input_ . Value(i), output_ . Value(i));
 }
 
-inline void Layer :: InitBackward(const double *delta){
+void Layer :: InitBackward(const double *delta){
     delta_ = RowVector(node_number_, delta);
     Multi_D_ActiveFunc_();
 }
 
-inline void Layer :: Backward(const Layer *next, const Matrix &theta, const ColVector &bias,
-                              Matrix &grad_theta, ColVector &grad_bias)
+void Layer :: Backward(const Layer *next,
+                       const Matrix &theta, const ColVector &bias,
+                       Matrix &grad_theta, ColVector &grad_bias)
 {
     delta_ = next -> delta_ * theta;
     Multi_D_ActiveFunc_();
-    
+
     grad_theta += (output_ * next -> delta_) . Transposition();
     grad_bias += next -> delta_ . Transposition();
 }
