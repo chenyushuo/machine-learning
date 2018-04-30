@@ -26,8 +26,10 @@ int main(int argc, char *argv[]){
                     mode = Net :: TRAINING;
                 else if (key == "TESTING")
                     mode = Net :: TESTING;
-                else
+                else{
+                    fprintf(stderr, "mode must be 'TRAINING' or 'TESTING'!\n");
                     HelpMessage();
+                }
             }
             else if (cur == "-i" || cur.find("--input=") == 0){
                 key = (cur == "-i") ? argv[++ i] : cur.substr(strlen("--input="));
@@ -40,6 +42,36 @@ int main(int argc, char *argv[]){
             else if (cur.find("--node=") == 0){
                 key = cur.substr(strlen("--node="));
                 SetArray(layer_number, node_number, key);
+            }
+            else if (cur.find("--learning_rate=") == 0){
+                key = cur.substr(strlen("--learning_rate="));
+                double val = -1;
+                sscanf(key.c_str(), "%lf", &val);
+                if (val <= 0){
+                    fprintf(stderr, "learning rate must be a positive real number!\n");
+                    HelpMessage();
+                }
+                Net :: SetLearningRate(val);
+            }
+            else if (cur.find("--epslion=") == 0){
+                key = cur.substr(strlen("--epslion="));
+                double val = -1;
+                sscanf(key.c_str(), "%lf", &val);
+                if (val < 0){
+                    fprintf(stderr, "epslion must be a non-negative real number!\n");
+                    HelpMessage();
+                }
+                Net :: SetEpslion(val);
+            }
+            else if (cur.find("--recursion_times=") == 0){
+                key = cur.substr(strlen("--recursion_times="));
+                int val = 0;
+                sscanf(key.c_str(), "%d", &val);
+                if (val == 0){
+                    fprintf(stderr, "recursion times can't be zero!\n");
+                    HelpMessage();
+                }
+                Net :: SetRecursionTimes(val);
             }
             else
                 HelpMessage();
@@ -81,8 +113,10 @@ void SetArray(int &length_of_array, int * &array, const string &keys){
     for (auto ch : keys){
         if (ch == ',')
             length_of_array++;
-        else if (!isdigit(ch))
+        else if (!isdigit(ch)){
+            fprintf(stderr, "node number must be interger!\n");
             HelpMessage();
+        }
     }
     delete [] array;
     array = new int [length_of_array];

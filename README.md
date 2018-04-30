@@ -24,3 +24,15 @@
     -h
     --help
         显示帮助信息
+
+    --learning_rate=val
+        设置learning rate， 默认为1.0（不能设置为非正数，仅在TRAINGING时生效）
+
+    --epslion=val
+        设置学习精度，默认为1E-9（不能设置为负数，仅在TRAINGING时生效）
+
+    --recursion_times=val
+        设置循环次数，负数表示不设限制，默认为-1（不能设置为0，仅在TRAINGING时生效）
+
+    运行时可按p键暂停
+    暂停时可按p键继续，按q键保存并退出

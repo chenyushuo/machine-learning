@@ -9,6 +9,7 @@
 #include "layer.h"
 #include "matrix.h"
 #include "function.h"
+#include "kbhit.h"
 
 using namespace std;
 
@@ -191,15 +192,21 @@ double Net :: Cost(){
     return total_cost;
 }
 
-inline void Net :: SetLearningRate(const double &learning_rate){
+void Net :: SetLearningRate(const double &learning_rate){
+    if (learning_rate <= 0)
+        return;
     learning_rate_ = learning_rate;
 }
 
-inline void Net :: SetEpslion(const double &epslion){
+void Net :: SetEpslion(const double &epslion){
+    if (epslion < 0)
+        return;
     epslion_ = epslion;
 }
 
-inline void Net :: SetRecursionTimes(const double &recursion_times){
+void Net :: SetRecursionTimes(const double &recursion_times){
+    if (recursion_times == 0)
+        return;
     recursion_times_ = recursion_times;
 }
 
@@ -209,15 +216,21 @@ void Net :: Training(){
         bias_[i] -> random();
     }
 
+    InitKeyboard();
     double new_cost = Cost(), old_cost;
     int recursion_times = recursion_times_;
+    int times = 0;
     do{
         recursion_times --;
         old_cost = new_cost;
         new_cost = Cost();
-        fprintf(stderr, "current cost = %f\n", new_cost);
+        fprintf(stderr, "recursion times = %d, current cost = %f\n",
+                ++ times, new_cost);
+        if (CheckKeyboard())
+            break;
     }while (fabs(old_cost - new_cost) >= epslion_ && recursion_times != 0);
 
+    CloseKeyboard();
     FILE *fp = fopen(output_file_name_, "a+");
     fprintf(fp, "training cost = %f\n", Cost());
     fclose(fp);
