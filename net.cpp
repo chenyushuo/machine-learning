@@ -6,6 +6,8 @@
 #include <cmath>
 #include <cstddef>
 
+#include <algorithm>
+
 #include "layer.h"
 #include "matrix.h"
 #include "function.h"
@@ -14,6 +16,7 @@
 using namespace std;
 
 const char * Net :: save_file_name_ = "argv.log";
+const int Net :: block_size_ = 100;
 double Net :: learning_rate_ = 1.0;
 double Net :: epslion_ = 1E-9;
 long long Net :: recursion_times_ = -1;
@@ -26,19 +29,26 @@ inline void Net :: ReadData(const char *input_file_name){
     }
 
     fscanf(fp, "%d%d%d", &data_number_, &feature_number_, &category_number_);
-    feature_ = new double *[feature_number_];
-    category_ = new double *[category_number_];
+    feature_ = new double *[data_number_];
+    category_ = new double *[data_number_];
 
+    int *trans = new int [data_number_];
+    iota(trans, trans + data_number_, 0);
+    if (status_ == TRAINING){
+        random_shuffle(trans, trans + data_number_);
+    }
     for (int i = 0; i < data_number_; i ++){
-        feature_[i] = new double[feature_number_];
+        double *f = new double[feature_number_];
+        feature_[trans[i]] = f;
         for (int j = 0; j < feature_number_; j ++)
-            fscanf(fp, "%lf", &feature_[i][j]);
+            fscanf(fp, "%lf", f + j);
 
-        category_[i] = new double[category_number_]();
+        category_[trans[i]] = new double [category_number_]();
         int category;
         fscanf(fp, "%d", &category);
-        category_[i][category] = 1.0;
+        category_[trans[i]][category] = 1.0;
     }
+    delete [] trans;
 }
 
 inline void Net :: NewLayer(const int *node_number){
@@ -69,14 +79,14 @@ inline void Net :: ClearOutput(){
     fclose(fp);
 }
 
-Net :: Net(int layer_number_, int *node_number,
+Net :: Net(int layer_number, int *node_number,
            const char *input_file_name, const char *output_file_name) :
-           status_(TRAINING), output_file_name_(output_file_name),
-           layer_number_(layer_number_), layer_(new Layer *[layer_number_]),
-           theta_(new Matrix *[layer_number_]),
-           grad_theta_(new Matrix *[layer_number_]),
-           bias_(new ColVector *[layer_number_]),
-           grad_bias_(new ColVector *[layer_number_])
+    status_(TRAINING), output_file_name_(output_file_name),
+    layer_number_(layer_number), layer_(new Layer *[layer_number_]),
+    theta_(new Matrix *[layer_number_]),
+    grad_theta_(new Matrix *[layer_number_]),
+    bias_(new ColVector *[layer_number_]),
+    grad_bias_(new ColVector *[layer_number_])
 {
     ReadData(input_file_name);
     ClearOutput();
@@ -89,12 +99,12 @@ Net :: Net(int layer_number_, int *node_number,
     NewGrad(node_number);
 }
 
-Net :: Net(int layer_number_, const int *node_number,
+Net :: Net(int layer_number, const int *node_number,
            const char *output_file_name) :
-           status_(TESTING), output_file_name_(output_file_name),
-           layer_number_(layer_number_), layer_(new Layer *[layer_number_]),
-           theta_(new Matrix *[layer_number_]), grad_theta_(nullptr),
-           bias_(new ColVector *[layer_number_]), grad_bias_(nullptr)
+    status_(TESTING), output_file_name_(output_file_name),
+    layer_number_(layer_number), layer_(new Layer *[layer_number_]),
+    theta_(new Matrix *[layer_number_]), grad_theta_(nullptr),
+    bias_(new ColVector *[layer_number_]), grad_bias_(nullptr)
 {
     ClearOutput();
     NewLayer(node_number);
@@ -126,69 +136,84 @@ Net :: ~Net(){
     delete [] category_;
 }
 
-double Net :: Cost(){
+double Net :: TrainingCost(){
     double total_cost = 0;
-    if (status_ == TRAINING){
-        for (int i = 0; i < layer_number_ - 1; i ++){
-            grad_theta_[i] -> clear();
-            grad_bias_[i] -> clear();
-        }
+    for (int i = 0; i < layer_number_ - 1; i ++){
+        grad_theta_[i] -> clear();
+        grad_bias_[i] -> clear();
     }
 
     double *delta = new double[category_number_];
-    for (int i = 0; i < data_number_; i ++){
+    static int start = 0;
+    int training_number = 0;
+    for (int i = start; i - start < block_size_ && i < data_number_; i ++){
+        training_number ++;
         layer_[0] -> InitForward(feature_[i]);
         for (int j = 1; j < layer_number_; j ++)
             layer_[j] -> Forward(layer_[j - 1], *theta_[j - 1], *bias_[j - 1]);
 
-        ColVector output = layer_[layer_number_ - 1] -> Output();
+        const ColVector &output = layer_[layer_number_ - 1] -> Output();
         for (int k = 0; k < category_number_; k ++){
             double out = output . Value(k), expect = category_[i][k];
-            /*fprintf(stderr, "cases = %d, choise = %d, possibility = %f expect = %f\n",
-                    i, k, out, expect);*/
             double cost = CostFunc(out, expect);
             total_cost += cost;
             delta[k] = D_CostFunc(out, expect, cost);
         }
 
-        if (status_ == TRAINING){
-            layer_[layer_number_ - 1] -> InitBackward(delta);
-            for (int j = layer_number_ - 2; j >= 0; j --){
-                layer_[j] -> Backward(layer_[j + 1], *theta_[j], *bias_[j],
-                                      *grad_theta_[j], *grad_bias_[j]);
+        layer_[layer_number_ - 1] -> InitBackward(delta);
+        for (int j = layer_number_ - 2; j >= 0; j --){
+            layer_[j] -> Backward(layer_[j + 1], *theta_[j], *bias_[j],
+                                    *grad_theta_[j], *grad_bias_[j]);
+        }
+    }
+
+    start += training_number;
+    if (start == data_number_)
+        start = 0;
+    total_cost /= training_number;
+    for (int j = 0; j < layer_number_ - 1; j ++){
+        *grad_theta_[j] /= training_number;
+        *grad_theta_[j] *= learning_rate_;
+        *grad_bias_[j] /= training_number;
+        *grad_bias_[j] *= learning_rate_;
+    }
+
+    for (int j = 0; j < layer_number_ - 1; j ++){
+        *theta_[j] -= *grad_theta_[j];
+        *bias_[j] -= *grad_bias_[j];
+    }
+    delete [] delta;
+    return total_cost;
+}
+
+double Net :: TestingCost(){
+    double total_cost = 0;
+    for (int i = 0; i < data_number_; i ++){
+        layer_[0] -> InitForward(feature_[i]);
+        for (int j = 1; j < layer_number_; j ++)
+            layer_[j] -> Forward(layer_[j - 1], *theta_[j - 1], *bias_[j - 1]);
+
+        const ColVector &output = layer_[layer_number_ - 1] -> Output();
+        for (int k = 0; k < category_number_; k ++){
+            double out = output . Value(k), expect = category_[i][k];
+            double cost = CostFunc(out, expect);
+            total_cost += cost;
+        }
+
+        double Max = 0;
+        int choise = -1;
+        for (int k = 0; k < category_number_; k ++){
+            if (Max < output . Value(k)){
+                Max = output . Value(k);
+                choise = k;
             }
         }
-        else{
-            double Max = 0;
-            int choise = -1;
-            for (int k = 0; k < category_number_; k ++){
-                if (Max < output . Value(k)){
-                    Max = output . Value(k);
-                    choise = k;
-                }
-                /*fprintf(stderr, "cases = %d, choise = %d, \
-                    possibility = %f expect = %f\n",
-                    i, k, output . Value(k), category_[i][k]);*/
-            }
-            FILE *fp = fopen(output_file_name_, "a+");
-            fprintf(fp, "choice = %d, possibility = %.4f\n", choise, Max);
-            fclose(fp);
-        }
+        FILE *fp = fopen(output_file_name_, "a+");
+        fprintf(fp, "choice = %d, possibility = %.4f\n", choise, Max);
+        fclose(fp);
     }
 
     total_cost /= data_number_;
-    if (status_ == TRAINING){
-        for (int j = 0; j < layer_number_ - 1; j ++){
-            *grad_theta_[j] /= data_number_;
-            *grad_bias_[j] /= data_number_;
-        }
-
-        for (int j = 0; j < layer_number_ - 1; j ++){
-            *theta_[j] -= learning_rate_ * (*grad_theta_[j]);
-            *bias_[j] -= learning_rate_ * (*grad_bias_[j]);
-        }
-    }
-    delete [] delta;
     return total_cost;
 }
 
@@ -217,13 +242,13 @@ void Net :: Training(){
     }
 
     InitKeyboard();
-    double new_cost = Cost(), old_cost;
+    double new_cost = TrainingCost(), old_cost;
     int recursion_times = recursion_times_;
     int times = 0;
     do{
         recursion_times --;
         old_cost = new_cost;
-        new_cost = Cost();
+        new_cost = TrainingCost();
         fprintf(stderr, "recursion times = %d, current cost = %f\n",
                 ++ times, new_cost);
         if (CheckKeyboard())
@@ -232,7 +257,7 @@ void Net :: Training(){
 
     CloseKeyboard();
     FILE *fp = fopen(output_file_name_, "a+");
-    fprintf(fp, "training cost = %f\n", Cost());
+    fprintf(fp, "training cost = %f\n", TrainingCost());
     fclose(fp);
     Save();
 }
@@ -278,7 +303,7 @@ Net * Net :: Load(const char *output_file_name){
 
 double Net :: Testing(const char *input_file_name){
     ReadData(input_file_name);
-    double result = Cost();
+    double result = TestingCost();
     FILE *fp = fopen(output_file_name_, "a+");
     fprintf(fp, "testing cost = %f\n", result);
     fclose(fp);

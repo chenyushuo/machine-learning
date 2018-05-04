@@ -7,22 +7,27 @@
 #include <cstddef>
 
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
+Matrix :: Matrix(const int &row_number, const int &col_number) :
+    row_number_(row_number), col_number_(col_number),
+    value_(new double [row_number * col_number]())
+{
+
+}
+
 Matrix :: Matrix(const int &row_number, const int &col_number, const double *value) :
     row_number_(row_number), col_number_(col_number),
-    value_(new double[row_number * col_number])
+    value_(new double [row_number * col_number])
 {
-    if (value == nullptr)
-        memset(value_, 0, sizeof(double) * row_number * col_number);
-    else
-        memcpy(value_, value, sizeof(double) * row_number * col_number);
+    memcpy(value_, value, sizeof(double) * row_number * col_number);
 }
 
 Matrix :: Matrix(const Matrix &matrix) :
     row_number_(matrix . row_number_), col_number_(matrix . col_number_),
-    value_(new double[matrix . row_number_ * matrix . col_number_])
+    value_(new double [matrix . row_number_ * matrix . col_number_])
 {
     memcpy(value_, matrix . value_, sizeof(double) * row_number_ * col_number_);
 }
@@ -33,7 +38,7 @@ Matrix & Matrix :: operator = (const Matrix &matrix){
     row_number_ = matrix . row_number_;
     col_number_ = matrix . col_number_;
     delete [] value_;
-    new double[row_number_ * col_number_];
+    value_ = new double [row_number_ * col_number_];
     memcpy(value_, matrix . value_, sizeof(double) * row_number_ * col_number_);
     return *this;
 }
@@ -46,7 +51,7 @@ Matrix & Matrix :: operator += (const Matrix &matrix){
     Matrix *a = this;
     const Matrix *b = &matrix;
     if (a -> row_number_ != b -> row_number_ || a -> col_number_ != b -> col_number_)
-        return *this;
+        exit(1);
     for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
             a -> Value(i, j) += b -> Value(i, j);
@@ -63,7 +68,7 @@ Matrix & Matrix :: operator -= (const Matrix &matrix){
     Matrix *a = this;
     const Matrix *b = &matrix;
     if (a -> row_number_ != b -> row_number_ || a -> col_number_ != b -> col_number_)
-        return *this;
+        exit(1);
     for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
             a -> Value(i, j) -= b -> Value(i, j);
@@ -80,7 +85,7 @@ Matrix Matrix :: operator * (const Matrix &matrix) const{
     const Matrix *a = this;
     const Matrix *b = &matrix;
     if (a -> col_number_ != b -> row_number_)
-        return Matrix();
+        exit(1);
     Matrix ans = Matrix(a -> row_number_, b -> col_number_);
     for (int i = 0; i < a -> row_number_; i ++)
         for (int k = 0; k < a -> col_number_; k ++){
@@ -91,22 +96,21 @@ Matrix Matrix :: operator * (const Matrix &matrix) const{
     return ans;
 }
 
-Matrix Matrix :: operator * (const double &k) const{
-    Matrix ans = *this;
-    for (int i = 0; i < row_number_; i ++)
+Matrix & Matrix :: operator *= (const double &k){
+    transform(value_, value_ + row_number_ * col_number_, value_,
+              [k] (const double &x){return x * k;});
+    /*for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
-            ans . Value(i, j) *= k;
-    return ans;
-}
-
-Matrix operator * (const double &k, const Matrix &matrix){
-    return matrix * k;
+            Value(i, j) *= k;*/
+    return *this;
 }
 
 Matrix & Matrix :: operator /= (const double &k){
-    for (int i = 0; i < row_number_; i ++)
+    transform(value_, value_ + row_number_ * col_number_, value_,
+              [k] (const double &x){return x / k;});
+    /*for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
-            Value(i, j) /= k;
+            Value(i, j) /= k;*/
     return *this;
 }
 
@@ -124,23 +128,26 @@ ostream & operator << (ostream &os, const Matrix &matrix){
 
 Matrix Matrix :: Transposition() const{
     Matrix ans = Matrix(col_number_, row_number_);
-    for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
+    for (int i = 0; i < col_number_; i ++)
+        for (int j = 0; j < row_number_; j ++)
             ans . Value(i, j) = Value(j, i);
     return ans;
 }
 
 void Matrix :: Map(double (*func)(const double &x)){
-    for (int i = 0; i < row_number_; i ++)
+    transform(value_, value_ + row_number_ * col_number_, value_, func);
+    /*for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
-            Value(i, j) = (*func)(Value(i, j));
+            Value(i, j) = (*func)(Value(i, j));*/
 }
 
 void Matrix :: random(){
     srand(rand() + time(0));
-    for (int i = 0; i < row_number_; i ++)
+    transform(value_, value_ + row_number_ * col_number_, value_,
+              [] (const double &x){return 1.0 * (rand() - rand()) / RAND_MAX;});
+    /*for (int i = 0; i < row_number_; i ++)
         for (int j = 0; j < col_number_; j ++)
-            Value(i, j) = 5.0 * (rand() - rand()) / RAND_MAX;
+            Value(i, j) = 1.0 * (rand() - rand()) / RAND_MAX;*/
 }
 
 void Matrix :: Save(FILE *fp){

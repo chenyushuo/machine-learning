@@ -10,6 +10,7 @@ public:
 
 private:
     const enum Status status_;
+    static const int block_size_;
     const char *output_file_name_;
     static const char *save_file_name_;
     static double learning_rate_;
@@ -25,7 +26,8 @@ private:
     int data_number_, feature_number_, category_number_;
     double **feature_, **category_;
 
-    double Cost();
+    double TrainingCost();
+    double TestingCost();
 
     void ReadData(const char *input_file_name);
     void NewLayer(const int *node_number);

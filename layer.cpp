@@ -19,12 +19,9 @@ Layer :: Layer(const int node_number,
 void Layer :: Forward(const Layer *pre,
                       const Matrix &theta, const ColVector &bias)
 {
-    output_ = input_ = theta * pre -> output_ + bias;
-    /*cout << "-----------------------" << endl;
-    cout << "theta : " << theta << endl;
-    cout << "pre -> output : " << pre -> output_ << endl;
-    cout << "input : " << input_ << endl;
-    cout << "-----------------------" << endl;*/
+    input_ = theta * pre -> output_;
+    input_ += bias;
+    output_ = input_;
     output_ . Map(ActiveFunc_);
 }
 
@@ -45,6 +42,6 @@ void Layer :: Backward(const Layer *next,
     delta_ = next -> delta_ * theta;
     Multi_D_ActiveFunc_();
 
-    grad_theta += (output_ * next -> delta_) . Transposition();
+    grad_theta += (output_ * next -> delta_).Transposition();
     grad_bias += next -> delta_ . Transposition();
 }

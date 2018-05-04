@@ -15,8 +15,10 @@ private :
     double *value_;
 
 public :
-    Matrix(const int &row_number = 0, const int &col_number = 0,
-           const double *value = nullptr);
+    Matrix() : row_number_(0), col_number_(0), value_(nullptr){}
+    Matrix(const int &row_number, const int &col_number);
+    Matrix(const int &row_number, const int &col_number,
+           const double *value);
     Matrix(const Matrix &matrix);
 
     virtual ~Matrix();
@@ -42,8 +44,7 @@ public :
     Matrix operator - (const Matrix &matrix) const;
 
     Matrix operator * (const Matrix &matrix) const;
-    Matrix operator * (const double &k) const;
-    friend Matrix operator * (const double &k, const Matrix &matrix);
+    Matrix & operator *= (const double &k);
 
     Matrix & operator /= (const double &k);
 
@@ -65,7 +66,9 @@ class ColVector : public Matrix{
 private :
 
 public :
-    ColVector(int row_number = 0, const double *value = nullptr) :
+    ColVector() : Matrix(){}
+    ColVector(int row_number) : Matrix(row_number, 1){}
+    ColVector(int row_number, const double *value) :
         Matrix(row_number, 1, value){}
     ColVector(const Matrix &matrix) :
         Matrix(matrix . Row() * matrix . Col(), 1, matrix . ValueAddress()){}
@@ -86,7 +89,9 @@ class RowVector : public Matrix{
 private :
 
 public :
-    RowVector(int col_number = 0, const double *value = nullptr) :
+    RowVector() : Matrix(){}
+    RowVector(int col_number) : Matrix(1, col_number){}
+    RowVector(int col_number, const double *value) :
         Matrix(1, col_number, value){}
     RowVector(const Matrix &matrix) :
         Matrix(1, matrix . Row() * matrix . Col(), matrix . ValueAddress()){}
