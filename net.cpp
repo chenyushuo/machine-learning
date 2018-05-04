@@ -161,10 +161,12 @@ double Net :: TrainingCost(){
         }
 
         layer_[layer_number_ - 1] -> InitBackward(delta);
-        for (int j = layer_number_ - 2; j >= 0; j --){
-            layer_[j] -> Backward(layer_[j + 1], *theta_[j], *bias_[j],
-                                    *grad_theta_[j], *grad_bias_[j]);
+        for (int j = layer_number_ - 2; j >= 1; j --){
+            layer_[j] -> Backward(layer_[j + 1], *theta_[j],
+                                  *grad_theta_[j], *grad_bias_[j]);
         }
+        layer_[0] -> Backward_zero(layer_[1], *theta_[0],
+                                   *grad_theta_[0], *grad_bias_[0]);
     }
 
     start += training_number;

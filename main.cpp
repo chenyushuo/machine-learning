@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstddef>
+#include <ctime>
 
 #include <string>
 
@@ -12,6 +13,7 @@ void HelpMessage();
 void SetArray(int &length_of_array, int * &array, const string &keys);
 
 int main(int argc, char *argv[]){
+    clock_t begin_time = clock();
     enum Net :: Status mode = Net :: TRAINING;
     string input_file_name, output_file_name;
     int layer_number = 0;
@@ -100,6 +102,7 @@ int main(int argc, char *argv[]){
         net = Net :: Load(output_file_name.c_str());
         net -> Testing(input_file_name.c_str());
     }
+    fprintf(stderr, "tot time = %f\n", 1.0 * (clock() - begin_time) / CLOCKS_PER_SEC);
     return 0;
 }
 

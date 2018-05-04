@@ -120,6 +120,50 @@ Matrix & Matrix :: operator *= (const double &k){
     return *this;
 }
 
+void Matrix :: InputMulti(const Matrix &theta, const Matrix &output){
+    double *vi = value_;
+    int len = output.row_number_;
+    const double *vt = theta.value_;
+    for (int i = 0; i < row_number_; i ++){
+        const double *vo = output.value_;
+        *vi = 0;
+        for (int j = 0; j < len; j ++){
+            *vi += (*vo) * (*vt);
+            vo ++, vt ++;
+        }
+        vi ++;
+    }
+}
+
+void Matrix :: DeltaMulti(const Matrix &delta, const Matrix &theta){
+    clear();
+    const double *vd2 = delta.value_;
+    const double *vt = theta.value_;
+    for (int i = 0; i < delta.col_number_; i ++){
+        double *vd = value_;
+        double k = *vd2;
+        for (int j = 0; j < col_number_; j ++){
+            *vd += k * (*vt);
+            vd ++, vt ++;
+        }
+        vd2 ++;
+    }
+}
+
+void Matrix :: GradThetaMulti(const Matrix &delta_T, const Matrix &output_T){
+    double *vgt = value_;
+    const double *vd = delta_T.value_;
+    for (int i = 0; i < row_number_; i ++){
+        double k = *vd;
+        const double *vo = output_T.value_;
+        for (int j = 0; j < col_number_; j ++){
+            *vgt += k * (*vo);
+            vgt ++, vo ++;
+        }
+        vd ++;
+    }
+}
+
 Matrix & Matrix :: operator /= (const double &k){
     transform(value_, value_ + row_number_ * col_number_, value_,
               [k] (const double &x){return x / k;});

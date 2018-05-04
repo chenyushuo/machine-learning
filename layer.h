@@ -27,8 +27,10 @@ public :
     void Forward(const Layer *pre, const Matrix &theta, const ColVector &bias);
 
     void InitBackward(const double *delta);
-    void Backward(const Layer *next, const Matrix &theta, const ColVector &bias,
+    void Backward(const Layer *next, const Matrix &theta,
                   Matrix &grad_theta, ColVector &grad_bias);
+    void Backward_zero(const Layer *next, const Matrix &theta,
+                       Matrix &grad_theta, ColVector &grad_bias);
 
     const ColVector &Output() const{return output_;}
     const int &NodeNumber() const{return node_number_;}

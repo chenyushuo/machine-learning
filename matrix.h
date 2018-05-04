@@ -45,6 +45,9 @@ public :
 
     Matrix operator * (const Matrix &matrix) const;
     Matrix & operator *= (const double &k);
+    void InputMulti(const Matrix &theta, const Matrix &output);
+    void DeltaMulti(const Matrix &delta, const Matrix &theta);
+    void GradThetaMulti(const Matrix &delta_T, const Matrix &output_T);
 
     Matrix & operator /= (const double &k);
 
