@@ -42,6 +42,8 @@ void Layer :: Backward(const Layer *next,
     delta_ = next -> delta_ * theta;
     Multi_D_ActiveFunc_();
 
-    grad_theta += (output_ * next -> delta_).Transposition();
-    grad_bias += next -> delta_ . Transposition();
+    ColVector delta_T = next -> delta_.Transposition();
+    RowVector output_T = output_.Transposition();
+    grad_theta += delta_T * output_T;
+    grad_bias += delta_T;
 }

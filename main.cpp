@@ -12,7 +12,7 @@ void HelpMessage();
 void SetArray(int &length_of_array, int * &array, const string &keys);
 
 int main(int argc, char *argv[]){
-    enum Net :: Status mode;
+    enum Net :: Status mode = Net :: TRAINING;
     string input_file_name, output_file_name;
     int layer_number = 0;
     int *node_number = nullptr;
@@ -72,6 +72,16 @@ int main(int argc, char *argv[]){
                     HelpMessage();
                 }
                 Net :: SetRecursionTimes(val);
+            }
+            else if (cur.find("--block_size=") == 0){
+                key = cur.substr(strlen("--block_size="));
+                int val = 0;
+                sscanf(key.c_str(), "%d", &val);
+                if (val <= 0){
+                    fprintf(stderr, "block size must be positive number!\n");
+                    HelpMessage();
+                }
+                Net :: SetBlockSize(val);
             }
             else
                 HelpMessage();

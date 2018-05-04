@@ -10,12 +10,12 @@ public:
 
 private:
     const enum Status status_;
-    static const int block_size_;
     const char *output_file_name_;
     static const char *save_file_name_;
     static double learning_rate_;
     static double epslion_;
     static long long recursion_times_;
+    static int block_size_;
 
     int layer_number_;
     Layer **layer_;
@@ -48,6 +48,7 @@ public:
     static void SetLearningRate(const double &learning_rate);
     static void SetEpslion(const double &epslion);
     static void SetRecursionTimes(const double &recursion_times);
+    static void SetBlockSize(const int &size);
 
     void Training();
     static Net * Load(const char *output_file_name);

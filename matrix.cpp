@@ -48,13 +48,18 @@ Matrix :: ~Matrix(){
 }
 
 Matrix & Matrix :: operator += (const Matrix &matrix){
-    Matrix *a = this;
     const Matrix *b = &matrix;
+#ifdef DEBUG_MODE
+    Matrix *a = this;
     if (a -> row_number_ != b -> row_number_ || a -> col_number_ != b -> col_number_)
         exit(1);
-    for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            a -> Value(i, j) += b -> Value(i, j);
+#endif
+    double *va = value_;
+    double *vb = b -> value_;
+    for (int i = 0; i < row_number_ * col_number_; i ++){
+        *va += *vb;
+        va ++, vb ++;
+    }
     return *this;
 }
 
@@ -65,13 +70,18 @@ Matrix Matrix :: operator + (const Matrix &matrix) const{
 }
 
 Matrix & Matrix :: operator -= (const Matrix &matrix){
-    Matrix *a = this;
     const Matrix *b = &matrix;
+#ifdef DEBUG_MODE
+    Matrix *a = this;
     if (a -> row_number_ != b -> row_number_ || a -> col_number_ != b -> col_number_)
         exit(1);
-    for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            a -> Value(i, j) -= b -> Value(i, j);
+#endif
+    double *va = value_;
+    double *vb = b -> value_;
+    for (int i = 0; i < row_number_ * col_number_; i ++){
+        *va -= *vb;
+        va ++, vb ++;
+    }
     return *this;
 }
 
@@ -84,33 +94,35 @@ Matrix Matrix :: operator - (const Matrix &matrix) const{
 Matrix Matrix :: operator * (const Matrix &matrix) const{
     const Matrix *a = this;
     const Matrix *b = &matrix;
+#ifdef DEBUG_MODE
     if (a -> col_number_ != b -> row_number_)
         exit(1);
+#endif
     Matrix ans = Matrix(a -> row_number_, b -> col_number_);
-    for (int i = 0; i < a -> row_number_; i ++)
+    double *va = value_;
+    for (int i = 0; i < a -> row_number_; i ++){
+        const double *vb = b -> value_;
         for (int k = 0; k < a -> col_number_; k ++){
-            double a_i_k = a -> Value(i, k);
-            for (int j = 0; j < b -> col_number_; j ++)
-                ans . Value(i, j) += a_i_k * b -> Value(k, j);
+            double a_i_k = *va ++;
+            double *vans = ans.value_ + i * ans.col_number_;
+            for (int j = 0; j < b -> col_number_; j ++){
+                *vans += a_i_k * (*vb);
+                vans ++, vb ++;
+            }
         }
+    }
     return ans;
 }
 
 Matrix & Matrix :: operator *= (const double &k){
     transform(value_, value_ + row_number_ * col_number_, value_,
               [k] (const double &x){return x * k;});
-    /*for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            Value(i, j) *= k;*/
     return *this;
 }
 
 Matrix & Matrix :: operator /= (const double &k){
     transform(value_, value_ + row_number_ * col_number_, value_,
               [k] (const double &x){return x / k;});
-    /*for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            Value(i, j) /= k;*/
     return *this;
 }
 
@@ -128,26 +140,26 @@ ostream & operator << (ostream &os, const Matrix &matrix){
 
 Matrix Matrix :: Transposition() const{
     Matrix ans = Matrix(col_number_, row_number_);
-    for (int i = 0; i < col_number_; i ++)
-        for (int j = 0; j < row_number_; j ++)
-            ans . Value(i, j) = Value(j, i);
+    double *vans = ans.value_;
+    double *v = value_;
+    for (int i = 0; i < col_number_; i ++){
+        v = value_ + i;
+        for (int j = 0; j < row_number_; j ++){
+            *vans = *v;
+            vans ++, v += col_number_;
+        }
+    }
     return ans;
 }
 
 void Matrix :: Map(double (*func)(const double &x)){
     transform(value_, value_ + row_number_ * col_number_, value_, func);
-    /*for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            Value(i, j) = (*func)(Value(i, j));*/
 }
 
 void Matrix :: random(){
     srand(rand() + time(0));
     transform(value_, value_ + row_number_ * col_number_, value_,
               [] (const double &x){return 1.0 * (rand() - rand()) / RAND_MAX;});
-    /*for (int i = 0; i < row_number_; i ++)
-        for (int j = 0; j < col_number_; j ++)
-            Value(i, j) = 1.0 * (rand() - rand()) / RAND_MAX;*/
 }
 
 void Matrix :: Save(FILE *fp){

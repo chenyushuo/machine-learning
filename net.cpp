@@ -16,10 +16,10 @@
 using namespace std;
 
 const char * Net :: save_file_name_ = "argv.log";
-const int Net :: block_size_ = 100;
 double Net :: learning_rate_ = 1.0;
 double Net :: epslion_ = 1E-9;
 long long Net :: recursion_times_ = -1;
+int Net :: block_size_ = 100;
 
 inline void Net :: ReadData(const char *input_file_name){
     FILE *fp = fopen(input_file_name, "r");
@@ -233,6 +233,12 @@ void Net :: SetRecursionTimes(const double &recursion_times){
     if (recursion_times == 0)
         return;
     recursion_times_ = recursion_times;
+}
+
+void Net :: SetBlockSize(const int &size){
+    if (size <= 0)
+        return;
+    block_size_ = size;
 }
 
 void Net :: Training(){
