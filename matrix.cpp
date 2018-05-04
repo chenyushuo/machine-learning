@@ -124,14 +124,15 @@ void Matrix :: InputMulti(const Matrix &theta, const Matrix &output){
     double *vi = value_;
     int len = output.row_number_;
     const double *vt = theta.value_;
+    const double *vo = output.value_;
     for (int i = 0; i < row_number_; i ++){
-        const double *vo = output.value_;
-        *vi = 0;
+        double tmp = 0;
         for (int j = 0; j < len; j ++){
-            *vi += (*vo) * (*vt);
+            tmp += (*vo) * (*vt);
             vo ++, vt ++;
         }
-        vi ++;
+        vo -= len;
+        *vi = tmp, vi ++;
     }
 }
 
@@ -153,13 +154,14 @@ void Matrix :: DeltaMulti(const Matrix &delta, const Matrix &theta){
 void Matrix :: GradThetaMulti(const Matrix &delta_T, const Matrix &output_T){
     double *vgt = value_;
     const double *vd = delta_T.value_;
+    const double *vo = output_T.value_;
     for (int i = 0; i < row_number_; i ++){
         double k = *vd;
-        const double *vo = output_T.value_;
         for (int j = 0; j < col_number_; j ++){
             *vgt += k * (*vo);
             vgt ++, vo ++;
         }
+        vo -= col_number_;
         vd ++;
     }
 }
