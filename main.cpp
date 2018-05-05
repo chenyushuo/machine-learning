@@ -102,7 +102,7 @@ int main(int argc, char *argv[]){
         net = Net :: Load(output_file_name.c_str());
         net -> Testing(input_file_name.c_str());
     }
-    fprintf(stderr, "tot time = %f\n", 1.0 * (clock() - begin_time) / CLOCKS_PER_SEC);
+    fprintf(stderr, "tot time = %fs\n", 1.0 * (clock() - begin_time) / CLOCKS_PER_SEC);
     return 0;
 }
 

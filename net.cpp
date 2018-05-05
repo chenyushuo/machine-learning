@@ -265,7 +265,7 @@ void Net :: Training(){
 
     CloseKeyboard();
     FILE *fp = fopen(output_file_name_, "a+");
-    fprintf(fp, "training cost = %f\n", TrainingCost());
+    fprintf(fp, "training cost = %f\n", TestingCost());
     fclose(fp);
     Save();
 }
