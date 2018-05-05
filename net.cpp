@@ -52,8 +52,12 @@ inline void Net :: ReadData(const char *input_file_name){
 }
 
 inline void Net :: NewLayer(const int *node_number){
-    for (int i = 0; i < layer_number_; i ++)
-        layer_[i] = new Layer(node_number[i], &sigmoid, &D_sigmoid);
+    for (int i = 0; i < layer_number_; i ++){
+		if (i != layer_number_ - 1)
+            layer_[i] = new Layer(node_number[i], &ReLU, &D_ReLU);
+		else
+		    layer_[i] = new Layer(node_number[i], &sigmoid, &D_sigmoid);
+	}
 }
 
 inline void Net :: NewAgrc(const int *node_number){

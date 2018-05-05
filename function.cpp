@@ -14,6 +14,14 @@ double D_sigmoid(const double &x, const double &y){
     return y * (1.0 - y);
 }
 
+double ReLU(const double &x){
+    return (x > 0) ? x : 0;
+}
+
+double D_ReLU(const double &x, const double &y){
+    return (x > 0) ? 1 : 0;
+}
+
 double CostFunc(const double &x1, const double &x2){
     return sqr(x1 - x2) / 2;
 }
