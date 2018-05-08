@@ -205,7 +205,7 @@ void Matrix :: Map(double (*func)(const double &x)){
 void Matrix :: random(){
     srand(rand() + time(0));
     transform(value_, value_ + row_number_ * col_number_, value_,
-              [] (const double &x){return 1.0 * (rand() - rand()) / RAND_MAX;});
+              [] (const double &x){return 0.1 * (rand() - rand()) / RAND_MAX;});
 }
 
 void Matrix :: Save(FILE *fp){

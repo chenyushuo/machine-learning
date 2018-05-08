@@ -56,7 +56,7 @@ inline void Net :: NewLayer(const int *node_number){
 		if (i != layer_number_ - 1)
             layer_[i] = new Layer(node_number[i], &ReLU, &D_ReLU);
 		else
-		    layer_[i] = new Layer(node_number[i], &sigmoid, &D_sigmoid);
+		    layer_[i] = new Layer(node_number[i], &ReLU, &D_ReLU);
 	}
 }
 
