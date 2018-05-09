@@ -25,7 +25,9 @@ double D_ReLU(const double &x, const double &y){
 }
 
 double CostFunc(const double &x1, const double &x2){
-    return sqr(x1 - x2) / 2;
+    //return sqr(x1 - x2) / 2;
+    //return - x2 * log(x1) + (x2 - 1) * log(1 - x1);
+    return x2 ? - log(x1) : - log(1 - x1);
 }
 
 double D_CostFunc(const double &x1, const double &x2, const double &y){

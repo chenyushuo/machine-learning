@@ -35,7 +35,7 @@ inline void Layer :: Multi_D_ActiveFunc_(){
 
 void Layer :: InitBackward(const double *delta){
     delta_ = RowVector(node_number_, delta);
-    Multi_D_ActiveFunc_();
+//    Multi_D_ActiveFunc_();
 }
 
 void Layer :: Backward(const Layer *next, const Matrix &theta,
