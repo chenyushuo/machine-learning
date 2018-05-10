@@ -143,7 +143,9 @@ Net :: ~Net(){
 double Net :: TrainingCost(){
     double total_cost = 0;
     for (int i = 0; i < layer_number_ - 1; i ++){
-        grad_theta_[i] -> clear();
+        // grad_theta_[i] -> clear();
+        *grad_theta_[i] = *theta_[i];
+        // *grad_theta_[i] *= 0.1;
         grad_bias_[i] -> clear();
     }
 
